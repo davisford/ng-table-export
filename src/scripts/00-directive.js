@@ -85,16 +85,17 @@ angular.module('ngTableExport', [])
             /**
              *  Generate data URI from table data
              */
-            generate: function(event, filename, table) {
+            generate: function(event, filename, table, currentPageOnly) {
 
               var isNgTable = attrs.ngTable,
                 table = table || scope.$parent.tableParams,
                 settings = table ? table.settings() : {},
                 cnt = table ? table.count() : {},
-                total = table ? settings.total : {};
+                total = table ? settings.total : {},
+                currentPageOnly = currentPageOnly === undefined ? false : currentPageOnly;
 
               // is pager on?  if so, we have to disable it temporarily
-              if (isNgTable && cnt < total) {
+              if (!currentPageOnly && isNgTable && cnt < total) {
                 var $off = settings.$scope.$on('ngTableAfterReloadData', function () {
                   // de-register callback so it won't continue firing
                   $off();
