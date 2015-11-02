@@ -3,9 +3,9 @@ angular.module('ngTableExport', [])
     // allow data links
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|data):/);
 }])
-.directive('exportCsv', ['$parse', '$timeout', function ($parse, $timeout) {
+.directive('exportCsv', ['$parse', '$timeout', 'ngTableEventsChannel', function ($parse, $timeout, ngTableEventsChannel) {
 
-  var delimiter = '\t';
+  var delimiter = ',';
   var header = 'data:text/csv;charset=UTF-8,';
 
   return {
@@ -62,7 +62,7 @@ angular.module('ngTableExport', [])
            * Dynamically generate a link and click it; works in chrome + firefox; unfortunately, safari
            * does not support the `download` attribute, so it ends up opening the file in a new tab https://bugs.webkit.org/show_bug.cgi?id=102914
            */
-          function download(dataUri, filename) {
+          function download(dataUri, filename, scope) {
             // tested in chrome / firefox / safari
             var link = document.createElement('a');
             // chrome + firefox
@@ -73,11 +73,19 @@ angular.module('ngTableExport', [])
             // needs to get wrapped to play nicely with angular $digest
             // else may cause '$digest already in progress' errors with other angular controls (e.g. angular-ui dropdown)
             $timeout(function () {
-              // must append to body for firefox; chrome & safari don't mind
-              document.body.appendChild(link);
-              link.click();
-              // destroy
-              document.body.removeChild(link);
+              try {
+                // must append to body for firefox; chrome & safari don't mind
+                document.body.appendChild(link);
+                link.click();
+                // destroy
+                document.body.removeChild(link);
+              }
+              catch(err) {
+                if (scope.logError) {
+                  scope.logError('NG Table Export Error saving file on client.');
+                }
+                throw(err);
+              }
             }, 0, false);
           }
 
@@ -95,7 +103,7 @@ angular.module('ngTableExport', [])
 
               // is pager on?  if so, we have to disable it temporarily
               if (isNgTable && cnt < total) {
-                var $off = settings.$scope.$on('ngTableAfterReloadData', function () {
+                var $off = ngTableEventsChannel.onAfterReloadData(function () {
                   // de-register callback so it won't continue firing
                   $off();
                   // give browser some time to re-render; FIXME - no good way to know when rendering is done?
@@ -106,7 +114,7 @@ angular.module('ngTableExport', [])
                     table.count(cnt);
                     table.reload();
                     // dynamically trigger download
-                    download(header + encodeURIComponent(data), filename);
+                    download(header + encodeURIComponent(data), filename, scope);
                   }, 1000, false);
                 });
 
