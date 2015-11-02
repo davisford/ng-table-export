@@ -25,9 +25,9 @@ If the table pager is not enabled, of course, it skips all this nonsense and jus
 
 I also added a few more tweaks:
 
-* Changed the delmiter from semicolon to tab `\t` -- you can change this or bind it via the scope if you want
+* Changed the delmiter from semicolon to tab `,` -- you can change this or bind it via the scope if you want
 * Added a small header to the csv so Excel will open it immediately without requiring you to `Import a file` -- it's a hint to Excel to use the right delimiter
-* I added the ability to be able to pass in the filename 
+* I added the ability to be able to pass in the filename
 * Made it respect `colspan`, e.g. `<td colspan="3">` -- normally everything would be left aligned in the output file, and this is bad news when you have things like group headers that may span multiple columns.  It now respects these and the output is identical to the table formatting.
 
 Hopefully someone finds it useful -- would love to hear any improvements -- the use of `$timeout` is pretty shady here, but I couldn't devise an event driven way to figure out when the browser had finished rendering the table so it was safe to parse.  
