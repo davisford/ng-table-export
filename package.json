@@ -8,11 +8,11 @@
     "url": "git://github.com/esvit/ng-table-export.git"
   },
   "devDependencies": {
-    "grunt-contrib-copy": "~0.4.1",
-    "grunt-contrib-clean": "~0.4.0",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-requirejs": "~0.4.0",
-    "grunt-contrib-uglify": "~0.2.1",
-    "grunt": "~0.4.1"
+    "grunt-contrib-copy": "~0.8.2",
+    "grunt-contrib-clean": "~0.6.0",
+    "grunt-contrib-concat": "~0.5.1",
+    "grunt-contrib-requirejs": "~0.4.4",
+    "grunt-contrib-uglify": "~0.10.0",
+    "grunt": "~0.4.5"
   }
 }
