@@ -58,6 +58,57 @@ angular.module('ngTableExport', [])
             data = 'sep=' + delimiter + '\n' + data;
           }
 
+          // custom for user agent detection
+          // http://stackoverflow.com/questions/5916900/how-can-you-detect-the-version-of-a-browser
+          function detectBrowser() {
+            var ua = navigator.userAgent, tem,
+              M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+            if (/trident/i.test(M[1])) {
+              tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+              return 'IE ' + (tem[1] || '');
+            }
+            if (M[1] === 'Chrome') {
+              tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
+              if (tem != null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+            }
+            M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+            if ((tem = ua.match(/version\/(\d+)/i)) != null) M.splice(1, 1, tem[1]);
+            return M.join(' ');
+          }
+
+          // custom extension for IE
+          function downloadForIE(dataURI, filename) {
+
+            // http://stackoverflow.com/questions/12168909/blob-from-dataurl
+            function dataURItoBlob(dataURI) {
+
+              var decodedURI = decodeURIComponent(dataURI.split(',')[1]);
+              var byteString =  decodedURI;
+
+              // separate out the mime component
+              var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+
+              // write the bytes of the string to an ArrayBuffer
+              var ab = new ArrayBuffer(byteString.length);
+              var ia = new Uint8Array(ab);
+              for (var i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+              }
+
+              // write the ArrayBuffer to a blob, and you're done
+              var blob = new Blob([ab], { type: mimeString });
+              return blob;
+
+              // Old code
+              // var bb = new BlobBuilder();
+              // bb.append(ab);
+              // return bb.getBlob(mimeString);
+            }
+
+            var blob = dataURItoBlob(dataURI);
+            window.navigator.msSaveBlob(blob, filename);
+          }
+
           /**
            * Dynamically generate a link and click it; works in chrome + firefox; unfortunately, safari
            * does not support the `download` attribute, so it ends up opening the file in a new tab https://bugs.webkit.org/show_bug.cgi?id=102914
@@ -74,17 +125,23 @@ angular.module('ngTableExport', [])
             // else may cause '$digest already in progress' errors with other angular controls (e.g. angular-ui dropdown)
             $timeout(function () {
               try {
+
                 // must append to body for firefox; chrome & safari don't mind
                 document.body.appendChild(link);
-                link.click();
+
+                var browser = detectBrowser();
+
+                if (browser.indexOf('IE') !== -1 || browser.indexOf('Edge') !== -1) {
+                  downloadForIE(dataUri, filename);
+                } else {
+                  link.click();
+                }
                 // destroy
                 document.body.removeChild(link);
-              }
-              catch(err) {
-                if (scope.logError) {
-                  scope.logError('NG Table Export Error saving file on client.');
-                }
-                throw(err);
+
+              } catch (err) {
+                console.error('NG Table Export Error saving file on client.');
+                throw (err);
               }
             }, 0, false);
           }
